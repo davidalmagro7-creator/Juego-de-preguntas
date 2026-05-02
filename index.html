@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Trivia Sorpresa 🎁</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d14;
+    --surface: #16161f;
+    --surface2: #1e1e2a;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0f0f5;
+    --muted: #7a7a99;
+    --purple: #a78bfa;
+    --purple-dim: #4c3f7a;
+    --purple-bg: rgba(167,139,250,0.1);
+    --green: #4ade80;
+    --green-bg: rgba(74,222,128,0.1);
+    --red: #f87171;
+    --red-bg: rgba(248,113,113,0.1);
+    --amber: #fbbf24;
+    --amber-bg: rgba(251,191,36,0.1);
+    --teal: #2dd4bf;
+    --teal-bg: rgba(45,212,191,0.1);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 0;
+  }
+  #app {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100vh;
+    padding: 20px 16px 40px;
+    position: relative;
+  }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  h1 { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; letter-spacing: -0.5px; }
+  h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; }
+  h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; }
+  .label { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 12px;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 14px 18px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    cursor: pointer;
+    margin-bottom: 8px;
+    text-align: left;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+  .btn:hover { background: #25253a; border-color: rgba(255,255,255,0.2); }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary {
+    background: var(--purple-bg);
+    border: 1px solid var(--purple-dim);
+    color: var(--purple);
+    font-weight: 500;
+    text-align: center;
+  }
+  .btn-primary:hover { background: rgba(167,139,250,0.18); }
+  .btn-correct { background: var(--green-bg) !important; border-color: var(--green) !important; color: var(--green) !important; }
+  .btn-wrong   { background: var(--red-bg) !important; border-color: var(--red) !important; color: var(--red) !important; }
+  .btn-disabled { pointer-events: none; opacity: 0.55; }
+
+  .btn-level {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    margin-bottom: 8px;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .btn-level:hover { background: #25253a; }
+  .btn-level.selected { border-color: var(--purple); background: var(--purple-bg); }
+  .btn-level .lvl-name { font-weight: 500; font-size: 15px; margin-bottom: 2px; }
+  .btn-level .lvl-desc { font-size: 12px; color: var(--muted); }
+  .btn-level.selected .lvl-desc { color: rgba(167,139,250,0.7); }
+
+  .score-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .score-box {
+    flex: 1;
+    text-align: center;
+    padding: 10px 8px;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .score-box.active-turn { border-color: var(--purple); }
+  .score-num { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: var(--text); }
+  .score-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .vs { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--muted); flex-shrink: 0; }
+
+  .timer-wrap { height: 5px; background: var(--surface2); border-radius: 99px; margin-bottom: 14px; overflow: hidden; }
+  .timer-fill { height: 100%; background: var(--purple); border-radius: 99px; transition: width 1s linear, background 0.3s; }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 9px;
+    border-radius: 99px;
+    margin: 2px;
+  }
+  .badge-purple { background: var(--purple-bg); color: var(--purple); border: 0.5px solid var(--purple-dim); }
+  .badge-amber  { background: var(--amber-bg);  color: var(--amber);  border: 0.5px solid rgba(251,191,36,0.3); }
+  .badge-red    { background: var(--red-bg);    color: var(--red);    border: 0.5px solid rgba(248,113,113,0.3); }
+  .badge-teal   { background: var(--teal-bg);   color: var(--teal);   border: 0.5px solid rgba(45,212,191,0.3); }
+
+  .debuff-banner {
+    background: var(--amber-bg);
+    border: 0.5px solid rgba(251,191,36,0.3);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--amber);
+  }
+
+  .question-text {
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.55;
+    color: var(--text);
+    margin-bottom: 18px;
+  }
+  .flipped { display: inline-block; transform: scaleX(-1); }
+
+  .inventory-wrap { margin-top: 6px; }
+  .inventory { display: flex; flex-wrap: wrap; gap: 5px; min-height: 24px; }
+
+  .box-reveal-card {
+    text-align: center;
+    padding: 28px 18px;
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn { 0%{transform:scale(0.7);opacity:0} 100%{transform:scale(1);opacity:1} }
+  .box-emoji { font-size: 52px; margin-bottom: 12px; display: block; }
+
+  .thinking-dots { display: inline-flex; gap: 5px; }
+  .thinking-dots span {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--muted);
+    animation: bounce 1.2s infinite;
+  }
+  .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+  .result-wrap { text-align: center; padding: 30px 0 10px; }
+  .result-crown { font-size: 60px; margin-bottom: 12px; display: block; }
+  .divider { height: 0.5px; background: var(--border); margin: 16px 0; }
+
+  .hero { text-align: center; padding: 40px 0 24px; }
+  .hero-icon { font-size: 64px; display: block; margin-bottom: 16px; }
+  .hero p { color: var(--muted); font-size: 15px; margin-top: 6px; line-height: 1.6; }
+
+  .result-msg {
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 500;
+    text-align: center;
+    margin-top: 10px;
+  }
+  .result-msg.correct { background: var(--green-bg); color: var(--green); border: 0.5px solid rgba(74,222,128,0.3); }
+  .result-msg.wrong   { background: var(--red-bg);   color: var(--red);   border: 0.5px solid rgba(248,113,113,0.3); }
+
+  .turn-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  /* ── MULTIPLAYER STYLES ── */
+  .mode-btn {
+    width: 100%;
+    padding: 18px 16px;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    margin-bottom: 10px;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .mode-btn:hover { background: #25253a; border-color: rgba(255,255,255,0.2); }
+  .mode-btn .mode-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+  .mode-btn .mode-desc  { font-size: 13px; color: var(--muted); }
+  .mode-btn.mode-online { border-color: var(--teal); }
+  .mode-btn.mode-online .mode-title { color: var(--teal); }
+
+  .room-code {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: 8px;
+    color: var(--purple);
+    text-align: center;
+    padding: 20px 0 10px;
+  }
+  .input-field {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 18px;
+    text-align: center;
+    letter-spacing: 4px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    outline: none;
+  }
+  .input-field:focus { border-color: var(--purple); }
+  .input-field::placeholder { letter-spacing: 2px; font-weight: 400; text-transform: none; color: var(--muted); font-size: 14px; }
+
+  .name-input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    margin-bottom: 10px;
+    outline: none;
+  }
+  .name-input:focus { border-color: var(--purple); }
+  .name-input::placeholder { color: var(--muted); }
+
+  .waiting-dots { display: inline-flex; gap: 6px; margin-left: 8px; vertical-align: middle; }
+  .waiting-dots span {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--teal);
+    animation: bounce 1.4s infinite;
+  }
+  .waiting-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .waiting-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  .opponent-waiting {
+    text-align: center;
+    padding: 30px;
+    color: var(--muted);
+  }
+  .opponent-waiting .big { font-size: 40px; margin-bottom: 12px; }
+
+  .watching-banner {
+    background: var(--surface2);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+  }
+  .copy-btn {
+    background: var(--teal-bg);
+    border: 1px solid rgba(45,212,191,0.3);
+    color: var(--teal);
+    border-radius: var(--radius-sm);
+    padding: 8px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    margin-left: 8px;
+  }
+  .copy-btn:hover { background: rgba(45,212,191,0.15); }
+
+  .err-msg { color: var(--red); font-size: 13px; text-align: center; margin: 6px 0; min-height: 18px; }
+
+  .online-answers { opacity: 1; }
+  .online-answers.disabled button { pointer-events: none; opacity: 0.45; }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ═══════════ MODO DE JUEGO ═══════════ -->
+<div class="screen active" id="screen-mode">
+  <div class="hero">
+    <span class="hero-icon">🎁</span>
+    <h1>Trivia Sorpresa</h1>
+    <p>Elige cómo quieres jugar</p>
+  </div>
+  <button class="mode-btn" onclick="chooseMode('solo')">
+    <div class="mode-title">🤖 Contra la IA</div>
+    <div class="mode-desc">Tú solo contra la inteligencia artificial</div>
+  </button>
+  <button class="mode-btn mode-online" onclick="chooseMode('online')">
+    <div class="mode-title">🌐 Multijugador online</div>
+    <div class="mode-desc">Juega con un amigo en tiempo real</div>
+  </button>
+</div>
+
+<!-- ═══════════ INICIO (vs IA) ═══════════ -->
+<div class="screen" id="screen-start">
+  <div class="hero">
+    <span class="hero-icon">🤖</span>
+    <h1>Contra la IA</h1>
+    <p>Responde bien, gana cajas y aplica desventajas a tu rival.</p>
+  </div>
+
+  <div class="card">
+    <p class="label" style="margin-bottom:12px">Dificultad de la IA</p>
+    <button class="btn-level" onclick="selectLevel('facil')" id="lvl-facil">
+      <div class="lvl-name">😴 Fácil</div>
+      <div class="lvl-desc">La IA falla mucho — perfecta para aprender</div>
+    </button>
+    <button class="btn-level" onclick="selectLevel('mediano')" id="lvl-mediano">
+      <div class="lvl-name">🙂 Mediano</div>
+      <div class="lvl-desc">Equilibrada — una partida justa</div>
+    </button>
+    <button class="btn-level" onclick="selectLevel('listo')" id="lvl-listo">
+      <div class="lvl-name">🧠 Listo</div>
+      <div class="lvl-desc">Acierta bastante — tendrás que esforzarte</div>
+    </button>
+    <button class="btn-level" onclick="selectLevel('crack')" id="lvl-crack">
+      <div class="lvl-name">🤖 Inteligentísimo</div>
+      <div class="lvl-desc">Casi nunca falla — solo para los valientes</div>
+    </button>
+  </div>
+
+  <button class="btn btn-primary" id="start-btn" onclick="startGame()" style="display:none;margin-top:4px">Empezar partida →</button>
+  <button class="btn" onclick="showScreen('screen-mode')" style="text-align:center;margin-top:4px">← Volver</button>
+
+  <div class="card" style="margin-top:8px">
+    <p class="label" style="margin-bottom:10px">Cómo se juega</p>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--muted)">
+      <div>🎯 Turnos alternos: tú y la IA (10 rondas)</div>
+      <div>✅ Al acertar recibes una caja sorpresa</div>
+      <div>📦 La caja aplica desventajas al rival</div>
+      <div>🏆 Gana quien más puntos acumule</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ LOBBY ONLINE ═══════════ -->
+<div class="screen" id="screen-lobby">
+  <div class="hero" style="padding: 30px 0 16px">
+    <span class="hero-icon">🌐</span>
+    <h1>Multijugador</h1>
+    <p>Crea una sala o únete a la de un amigo</p>
+  </div>
+
+  <div class="card">
+    <p class="label" style="margin-bottom:10px">Tu nombre</p>
+    <input class="name-input" id="player-name-input" placeholder="Escribe tu nombre..." maxlength="20">
+  </div>
+
+  <div class="card">
+    <p class="label" style="margin-bottom:12px">¿Qué quieres hacer?</p>
+    <button class="btn btn-primary" onclick="createRoom()">➕ Crear sala nueva</button>
+    <div style="display:flex;align-items:center;gap:8px;margin: 4px 0 8px">
+      <input class="input-field" id="join-code-input" placeholder="Código de sala" maxlength="6" oninput="this.value=this.value.toUpperCase()">
+      <button class="btn btn-primary" style="width:auto;white-space:nowrap;flex-shrink:0" onclick="joinRoom()">Unirse</button>
+    </div>
+    <p class="err-msg" id="lobby-err"></p>
+  </div>
+  <button class="btn" onclick="showScreen('screen-mode')" style="text-align:center">← Volver</button>
+</div>
+
+<!-- ═══════════ SALA DE ESPERA ═══════════ -->
+<div class="screen" id="screen-waiting">
+  <div class="card" style="margin-top: 30px">
+    <p class="label" style="margin-bottom: 8px">Código de sala</p>
+    <div class="room-code" id="display-room-code">----</div>
+    <p style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:12px">Comparte este código con tu amigo</p>
+    <button class="copy-btn" onclick="copyCode()" style="display:block;margin:0 auto">📋 Copiar código</button>
+  </div>
+  <div class="opponent-waiting">
+    <div class="big">👥</div>
+    <p>Esperando a que se una tu rival<span class="waiting-dots"><span></span><span></span><span></span></span></p>
+  </div>
+  <button class="btn" onclick="leaveRoom()" style="text-align:center">← Salir de la sala</button>
+</div>
+
+<!-- ═══════════ PREGUNTA JUGADOR ═══════════ -->
+<div class="screen" id="screen-player">
+  <div class="score-bar">
+    <div class="score-box" id="score-box-player">
+      <div class="score-num" id="player-score">0</div>
+      <div class="score-sub" id="player-name-label">Tú</div>
+    </div>
+    <div class="vs">VS</div>
+    <div class="score-box" id="score-box-ai">
+      <div class="score-num" id="ai-score">0</div>
+      <div class="score-sub" id="ai-label">IA</div>
+    </div>
+  </div>
+
+  <div id="debuff-display" style="display:none" class="debuff-banner"></div>
+
+  <div class="card">
+    <div class="turn-tag" id="round-label">Tu turno — Ronda 1 de 10</div>
+    <div class="timer-wrap"><div class="timer-fill" id="timer-bar" style="width:100%"></div></div>
+    <div class="question-text" id="question-text"></div>
+    <div id="answers-container" class="online-answers"></div>
+  </div>
+
+  <div class="inventory-wrap">
+    <p class="label" style="margin-bottom:8px">Cajas pendientes para el rival</p>
+    <div class="inventory" id="player-inventory"></div>
+  </div>
+</div>
+
+<!-- ═══════════ BOX REVEAL ═══════════ -->
+<div class="screen" id="screen-box">
+  <div class="score-bar">
+    <div class="score-box"><div class="score-num" id="box-player-score">0</div><div class="score-sub" id="box-player-label">Tú</div></div>
+    <div class="vs">VS</div>
+    <div class="score-box"><div class="score-num" id="box-ai-score">0</div><div class="score-sub" id="box-ai-label">IA</div></div>
+  </div>
+  <div class="box-reveal-card" id="box-reveal-content"></div>
+  <button class="btn btn-primary" id="box-continue-btn">Continuar →</button>
+</div>
+
+<!-- ═══════════ TURNO IA / RIVAL ═══════════ -->
+<div class="screen" id="screen-ai">
+  <div class="score-bar">
+    <div class="score-box"><div class="score-num" id="ai-turn-player-score">0</div><div class="score-sub" id="ai-turn-player-label">Tú</div></div>
+    <div class="vs">VS</div>
+    <div class="score-box"><div class="score-num" id="ai-turn-ai-score">0</div><div class="score-sub" id="ai-turn-label">IA</div></div>
+  </div>
+  <div id="ai-debuff-display" style="display:none" class="debuff-banner"></div>
+  <div class="card">
+    <div class="turn-tag" id="ai-round-label">Turno del rival</div>
+    <div class="timer-wrap"><div class="timer-fill" id="ai-timer-bar" style="width:100%"></div></div>
+    <div class="question-text" id="ai-question-text"></div>
+    <div style="text-align:center;padding:16px 0" id="ai-thinking">
+      <div class="thinking-dots"><span></span><span></span><span></span></div>
+      <div style="font-size:13px;color:var(--muted);margin-top:8px" id="ai-thinking-label">La IA está pensando...</div>
+    </div>
+    <!-- Online: rival answer display -->
+    <div id="online-rival-answers" style="display:none"></div>
+    <div id="ai-result-msg" style="display:none"></div>
+  </div>
+  <button class="btn btn-primary" id="ai-next-btn" style="display:none" onclick="advanceRound()">Siguiente ronda →</button>
+</div>
+
+<!-- ═══════════ RESULTADO ═══════════ -->
+<div class="screen" id="screen-result">
+  <div class="result-wrap">
+    <span class="result-crown" id="result-crown">🏆</span>
+    <h2 id="result-title"></h2>
+    <p id="result-subtitle" style="color:var(--muted);margin-top:6px"></p>
+    <div class="divider"></div>
+    <div class="score-bar" style="margin-top:0">
+      <div class="score-box"><div class="score-num" id="final-player-score">0</div><div class="score-sub" id="final-player-label">Tú</div></div>
+      <div class="vs">VS</div>
+      <div class="score-box"><div class="score-num" id="final-ai-score">0</div><div class="score-sub" id="final-ai-label">IA</div></div>
+    </div>
+    <div class="divider"></div>
+    <p id="boxes-summary" style="font-size:13px;color:var(--muted);margin-bottom:20px"></p>
+    <button class="btn btn-primary" onclick="resetGame()">Jugar de nuevo →</button>
+  </div>
+</div>
+
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, update, onValue, off, remove, push, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDHEEb_awMFg8fUFs_sA2oDdI5rj0X-z84",
+  authDomain: "trivial-sorpresa.firebaseapp.com",
+  databaseURL: "https://trivial-sorpresa-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "trivial-sorpresa",
+  storageBucket: "trivial-sorpresa.firebasestorage.app",
+  messagingSenderId: "501502800241",
+  appId: "1:501502800241:web:27c7cfbd1bd53ed2f306d0",
+  measurementId: "G-4Z778ZHW5R"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
+
+// ── Expose to global scope ──
+window._fb = { db, ref, set, get, update, onValue, off, remove, push, serverTimestamp };
+
+// Signal that Firebase is ready
+window._fbReady = true;
+document.dispatchEvent(new Event('fbReady'));
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════════ */
+const QUESTIONS = [
+  {q:"¿Cuál es el río más largo del mundo?",a:["Nilo","Amazonas","Yangtsé","Misisipi"],c:0},
+  {q:"¿En qué año llegó el hombre a la Luna?",a:["1965","1969","1972","1961"],c:1},
+  {q:"¿Cuántos huesos tiene el cuerpo humano adulto?",a:["206","212","198","220"],c:0},
+  {q:"¿Cuál es el país más grande del mundo por superficie?",a:["Canadá","China","Estados Unidos","Rusia"],c:3},
+  {q:"¿Quién pintó la Mona Lisa?",a:["Miguel Ángel","Rafael","Leonardo da Vinci","Botticelli"],c:2},
+  {q:"¿Cuál es el elemento químico con símbolo Au?",a:["Plata","Oro","Aluminio","Argón"],c:1},
+  {q:"¿En qué continente está Egipto?",a:["Asia","Europa","África","Oceanía"],c:2},
+  {q:"¿Cuántos planetas tiene el Sistema Solar?",a:["7","8","9","10"],c:1},
+  {q:"¿Cuál es la capital de Australia?",a:["Sídney","Melbourne","Brisbane","Canberra"],c:3},
+  {q:"¿Quién escribió Don Quijote de la Mancha?",a:["Lope de Vega","Francisco de Quevedo","Miguel de Cervantes","Calderón de la Barca"],c:2},
+  {q:"¿Cuál es el océano más grande?",a:["Atlántico","Índico","Ártico","Pacífico"],c:3},
+  {q:"¿A qué temperatura hierve el agua al nivel del mar?",a:["90°C","95°C","100°C","105°C"],c:2},
+  {q:"¿Cuántos lados tiene un hexágono?",a:["5","6","7","8"],c:1},
+  {q:"¿Cuál es el metal más abundante en la corteza terrestre?",a:["Hierro","Aluminio","Cobre","Silicio"],c:1},
+  {q:"¿En qué país se originó el yoga?",a:["China","Japón","India","Nepal"],c:2},
+  {q:"¿Cuántos metros tiene un kilómetro?",a:["100","500","1000","10000"],c:2},
+  {q:"¿Cuál es el animal terrestre más rápido?",a:["León","Guepardo","Caballo","Halcón"],c:1},
+  {q:"¿Qué planeta es el más cercano al Sol?",a:["Venus","Tierra","Marte","Mercurio"],c:3},
+  {q:"¿Cuántos colores tiene el arco iris?",a:["5","6","7","8"],c:2},
+  {q:"¿Cuál es la montaña más alta del mundo?",a:["K2","Monte Everest","Aconcagua","Mont Blanc"],c:1},
+  {q:"¿Cuál es la capital de Japón?",a:["Osaka","Kioto","Tokio","Hiroshima"],c:2},
+  {q:"¿Qué gas es el más abundante en la atmósfera terrestre?",a:["Oxígeno","Dióxido de carbono","Nitrógeno","Argón"],c:2},
+  {q:"¿Cuántos años dura una década?",a:["5","10","20","100"],c:1},
+  {q:"¿Quién fue el primer presidente de los Estados Unidos?",a:["Abraham Lincoln","Thomas Jefferson","George Washington","Benjamin Franklin"],c:2},
+  {q:"¿Cuántos continentes hay en la Tierra?",a:["5","6","7","8"],c:2},
+  {q:"¿En qué país se inventó la pizza?",a:["España","Francia","Italia","Grecia"],c:2},
+  {q:"¿Cuál es el idioma más hablado del mundo?",a:["Inglés","Español","Hindi","Mandarín"],c:3},
+  {q:"¿Cuántos días tiene un año bisiesto?",a:["364","365","366","367"],c:2},
+  {q:"¿Qué órgano del cuerpo humano produce la insulina?",a:["Hígado","Riñón","Páncreas","Estómago"],c:2},
+  {q:"¿Cuál es el planeta más grande del Sistema Solar?",a:["Saturno","Júpiter","Urano","Neptuno"],c:1},
+];
+
+const DEBUFFS = [
+  {id:"time",    name:"Contrarreloj",   desc:"Solo 8 segundos para responder",             icon:"⏱️", color:"badge-amber"},
+  {id:"flip",    name:"Espejo",         desc:"La pregunta aparece al revés",               icon:"🔄", color:"badge-purple"},
+  {id:"trap",    name:"Trampa",         desc:"Una respuesta incorrecta aparece como buena",icon:"⚠️", color:"badge-red"},
+  {id:"penalty", name:"Penalización",   desc:"Si fallas pierdes 1 punto extra",            icon:"💀", color:"badge-red"},
+  {id:"blind",   name:"Ceguera parcial",desc:"Solo ves 3 de las 4 opciones",              icon:"👁️", color:"badge-purple"},
+  {id:"double",  name:"Doble o nada",   desc:"Acierto +2 pts, fallo -1 pt",               icon:"🎲", color:"badge-amber"},
+  {id:"shuffle", name:"Barajar",        desc:"Las opciones se mezclan",                   icon:"🔀", color:"badge-teal"},
+  {id:"skip",    name:"Sin reloj",      desc:"No puedes ver el tiempo restante",          icon:"🙈", color:"badge-teal"},
+];
+
+const LEVELS = {
+  facil:  {name:"😴 Fácil",          acc:0.30, trapAcc:0.15},
+  mediano:{name:"🙂 Mediano",        acc:0.65, trapAcc:0.30},
+  listo:  {name:"🧠 Listo",          acc:0.82, trapAcc:0.50},
+  crack:  {name:"🤖 Inteligentísimo",acc:0.95, trapAcc:0.75},
+};
+
+/* ═══════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════ */
+let selectedLevel = null;
+let state = {};
+let timerInterval = null;
+
+// Online multiplayer state
+let onlineMode = false;       // true when playing online
+let myRole = null;            // 'host' or 'guest'
+let roomCode = null;
+let roomRef = null;
+let roomListener = null;
+let myPlayerKey = null;       // 'player1' or 'player2'
+let rivalPlayerKey = null;    // 'player2' or 'player1'
+let onlineState = null;       // last snapshot of room state
+let waitingForRival = false;
+
+/* ═══════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════ */
+function fb() { return window._fb; }
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function chooseMode(mode) {
+  if (mode === 'solo') {
+    onlineMode = false;
+    showScreen('screen-start');
+  } else {
+    onlineMode = true;
+    showScreen('screen-lobby');
+  }
+}
+
+function getPlayerName() {
+  const n = (document.getElementById('player-name-input').value || '').trim();
+  return n || 'Jugador';
+}
+
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(roomCode).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '✅ Copiado';
+    setTimeout(() => btn.textContent = '📋 Copiar código', 1500);
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   SOLO MODE
+═══════════════════════════════════════════════════ */
+function selectLevel(lvl) {
+  selectedLevel = lvl;
+  document.querySelectorAll('.btn-level').forEach(b => b.classList.remove('selected'));
+  document.getElementById('lvl-' + lvl).classList.add('selected');
+  document.getElementById('start-btn').style.display = 'block';
+}
+
+function startGame() {
+  if (!selectedLevel) return;
+  const shuffled = [...QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10);
+  state = {
+    questions: shuffled,
+    round: 0,
+    playerScore: 0,
+    aiScore: 0,
+    pendingDebuffsForAI: [],
+    pendingDebuffsForPlayer: [],
+    totalBoxes: 0,
+    answered: false,
+    level: selectedLevel,
+  };
+  setLabels();
+  showScreen('screen-player');
+  loadPlayerQuestion();
+}
+
+function setLabels(p1name, p2name) {
+  if (onlineMode) {
+    const myName = p1name || 'Tú';
+    const rivalName = p2name || 'Rival';
+    _setLabelText('player-name-label', myName);
+    _setLabelText('box-player-label', myName);
+    _setLabelText('ai-turn-player-label', myName);
+    _setLabelText('final-player-label', myName);
+    _setLabelText('ai-label', rivalName);
+    _setLabelText('box-ai-label', rivalName);
+    _setLabelText('ai-turn-label', rivalName);
+    _setLabelText('final-ai-label', rivalName);
+  } else {
+    const short = LEVELS[state.level].name.split(' ')[0];
+    ['ai-label','box-ai-label','ai-turn-label','final-ai-label'].forEach(id => _setLabelText(id, 'IA ' + short));
+    ['player-name-label','box-player-label','ai-turn-player-label','final-player-label'].forEach(id => _setLabelText(id, 'Tú'));
+  }
+}
+
+function _setLabelText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+function updateScores() {
+  const ids = [
+    ['player-score','ai-score'],
+    ['box-player-score','box-ai-score'],
+    ['ai-turn-player-score','ai-turn-ai-score'],
+    ['final-player-score','final-ai-score'],
+  ];
+  ids.forEach(([p,a]) => {
+    const pe = document.getElementById(p); if(pe) pe.textContent = state.playerScore;
+    const ae = document.getElementById(a); if(ae) ae.textContent = state.aiScore;
+  });
+}
+
+function getBoxes() {
+  const count = Math.floor(Math.random() * 2) + 1;
+  return [...DEBUFFS].sort(() => Math.random() - 0.5).slice(0, count);
+}
+
+function startTimer(barId, secs, hidden, onEnd) {
+  clearInterval(timerInterval);
+  let left = secs;
+  const bar = document.getElementById(barId);
+  if (bar) {
+    bar.style.width = '100%';
+    bar.style.background = 'var(--purple)';
+    bar.parentElement.style.opacity = hidden ? '0' : '1';
+  }
+  timerInterval = setInterval(() => {
+    left--;
+    const pct = Math.max(0, (left / secs) * 100);
+    if (bar) {
+      bar.style.width = pct + '%';
+      if (pct < 30) bar.style.background = 'var(--red)';
+      else if (pct < 60) bar.style.background = 'var(--amber)';
+    }
+    if (left <= 0) { clearInterval(timerInterval); onEnd(); }
+  }, 1000);
+}
+
+function loadPlayerQuestion() {
+  clearInterval(timerInterval);
+  state.answered = false;
+  const q = state.questions[state.round];
+  const debuffs = state.pendingDebuffsForPlayer;
+
+  document.getElementById('round-label').textContent =
+    onlineMode
+      ? `Tu turno — Ronda ${state.round + 1} de 10`
+      : `Tu turno — Ronda ${state.round + 1} de 10`;
+
+  const dd = document.getElementById('debuff-display');
+  if (debuffs.length > 0) {
+    dd.style.display = 'block';
+    dd.innerHTML = `<strong>Tus desventajas:</strong> ${debuffs.map(d => `${d.icon} ${d.name}`).join(', ')}`;
+  } else {
+    dd.style.display = 'none';
+  }
+
+  const hasTime    = debuffs.some(d => d.id === 'time');
+  const hasFlip    = debuffs.some(d => d.id === 'flip');
+  const hasTrap    = debuffs.some(d => d.id === 'trap');
+  const hasBlind   = debuffs.some(d => d.id === 'blind');
+  const hasDouble  = debuffs.some(d => d.id === 'double');
+  const hasPenalty = debuffs.some(d => d.id === 'penalty');
+  const hasSkip    = debuffs.some(d => d.id === 'skip');
+
+  const qEl = document.getElementById('question-text');
+  qEl.innerHTML = hasFlip ? `<span class="flipped">${q.q}</span>` : q.q;
+
+  let answers = [...q.a];
+  const correct = q.c;
+
+  if (hasTrap) {
+    const wrongOpts = [0,1,2,3].filter(i => i !== correct);
+    const trapIdx = wrongOpts[Math.floor(Math.random() * wrongOpts.length)];
+    answers = answers.map((a, i) => i === trapIdx ? `✓ ${a}` : a);
+  }
+
+  let hiddenIdx = -1;
+  if (hasBlind) {
+    const wrongOpts = [0,1,2,3].filter(i => i !== correct);
+    hiddenIdx = wrongOpts[Math.floor(Math.random() * wrongOpts.length)];
+  }
+
+  const container = document.getElementById('answers-container');
+  container.innerHTML = '';
+  container.className = 'online-answers';
+  answers.forEach((a, i) => {
+    if (i === hiddenIdx) return;
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.textContent = a;
+    btn.onclick = () => playerAnswer(i, correct, hasPenalty, hasDouble);
+    container.appendChild(btn);
+  });
+
+  renderInventory();
+  updateScores();
+
+  const secs = hasTime ? 8 : 20;
+  startTimer('timer-bar', secs, hasSkip, () => {
+    if (!state.answered) playerAnswer(-1, correct, hasPenalty, hasDouble);
+  });
+}
+
+function playerAnswer(chosen, correct, hasPenalty, hasDouble) {
+  if (state.answered) return;
+  state.answered = true;
+  clearInterval(timerInterval);
+
+  document.getElementById('answers-container').querySelectorAll('button').forEach(b => {
+    b.classList.add('btn-disabled');
+    const clean = b.textContent.replace(/^✓\s*/, '').trim();
+    const idx = state.questions[state.round].a.findIndex(a => a === clean || b.textContent.includes(a));
+    if (idx === correct) b.classList.add('btn-correct');
+    else if (state.questions[state.round].a.indexOf(clean) === chosen || b.textContent === state.questions[state.round].a[chosen]) b.classList.add('btn-wrong');
+  });
+
+  const isCorrect = chosen === correct;
+  state.pendingDebuffsForPlayer = [];
+
+  if (onlineMode) {
+    // Write my answer to Firebase
+    onlinePlayerAnswer(isCorrect, hasPenalty, hasDouble);
+  } else {
+    if (isCorrect) {
+      state.playerScore += hasDouble ? 2 : 1;
+      updateScores();
+      setTimeout(() => showBox(true), 700);
+    } else {
+      if (hasPenalty) state.playerScore = Math.max(0, state.playerScore - 1);
+      if (hasDouble)  state.playerScore = Math.max(0, state.playerScore - 1);
+      updateScores();
+      setTimeout(() => doAITurn(), 800);
+    }
+  }
+}
+
+function showBox(fromPlayer) {
+  const boxes = getBoxes();
+  state.totalBoxes += boxes.length;
+  const content = document.getElementById('box-reveal-content');
+  const btn = document.getElementById('box-continue-btn');
+
+  const rivalLabel = onlineMode
+    ? (document.getElementById('ai-label').textContent || 'Rival')
+    : 'la IA';
+
+  if (fromPlayer) {
+    state.pendingDebuffsForAI = boxes;
+    content.innerHTML = `
+      <span class="box-emoji">${boxes.map(b => b.icon).join('')}</span>
+      <h3 style="margin-bottom:8px">¡Caja ganada!</h3>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:14px">${capitalizeFirst(rivalLabel)} sufrirá estas desventajas:</p>
+      <div>${boxes.map(b => `<span class="badge ${b.color}">${b.icon} ${b.name}: ${b.desc}</span>`).join('')}</div>
+    `;
+    if (onlineMode) {
+      btn.textContent = 'Turno del rival →';
+      btn.onclick = () => onlineRivalTurnStart(boxes);
+    } else {
+      btn.textContent = 'Turno de la IA →';
+      btn.onclick = () => doAITurn();
+    }
+  } else {
+    state.pendingDebuffsForPlayer = boxes;
+    content.innerHTML = `
+      <span class="box-emoji">${boxes.map(b => b.icon).join('')}</span>
+      <h3 style="margin-bottom:8px">${capitalizeFirst(rivalLabel)} ganó una caja</h3>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:14px">Sufrirás estas desventajas:</p>
+      <div>${boxes.map(b => `<span class="badge ${b.color}">${b.icon} ${b.name}: ${b.desc}</span>`).join('')}</div>
+    `;
+    btn.textContent = 'Mi turno →';
+    btn.onclick = () => advanceRound();
+  }
+  updateScores();
+  showScreen('screen-box');
+}
+
+function capitalizeFirst(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function doAITurn() {
+  showScreen('screen-ai');
+  const q = state.questions[state.round];
+  const aiDebuffs = state.pendingDebuffsForAI;
+  const lvl = LEVELS[state.level];
+  const rivalName = document.getElementById('ai-label').textContent || 'IA';
+
+  document.getElementById('ai-round-label').textContent = `Turno de ${rivalName} — Ronda ${state.round + 1} de 10`;
+
+  const aidEl = document.getElementById('ai-debuff-display');
+  if (aiDebuffs.length > 0) {
+    aidEl.style.display = 'block';
+    aidEl.innerHTML = `<strong>Desventajas de ${rivalName}:</strong> ${aiDebuffs.map(d => `${d.icon} ${d.name}`).join(', ')}`;
+  } else {
+    aidEl.style.display = 'none';
+  }
+
+  document.getElementById('ai-question-text').textContent = q.q;
+  document.getElementById('ai-thinking').style.display = 'block';
+  document.getElementById('ai-thinking-label').textContent = `${rivalName} está pensando...`;
+  document.getElementById('ai-result-msg').style.display = 'none';
+  document.getElementById('ai-next-btn').style.display = 'none';
+  document.getElementById('online-rival-answers').style.display = 'none';
+  updateScores();
+
+  const hasTrap    = aiDebuffs.some(d => d.id === 'trap');
+  const hasPenalty = aiDebuffs.some(d => d.id === 'penalty');
+  const hasDouble  = aiDebuffs.some(d => d.id === 'double');
+  const hasTime    = aiDebuffs.some(d => d.id === 'time');
+
+  const baseAcc   = hasTrap ? lvl.trapAcc : lvl.acc;
+  const aiCorrect = Math.random() < baseAcc;
+  const secs      = hasTime ? 8 : 20;
+  const thinkMs   = Math.min(Math.random() * 3500 + 1200, secs * 1000 - 400);
+
+  startTimer('ai-timer-bar', secs, false, () => resolveAI(false, hasPenalty, hasDouble));
+  setTimeout(() => { clearInterval(timerInterval); resolveAI(aiCorrect, hasPenalty, hasDouble); }, thinkMs);
+}
+
+function resolveAI(correct, hasPenalty, hasDouble) {
+  clearInterval(timerInterval);
+  state.pendingDebuffsForAI = [];
+  const msgEl = document.getElementById('ai-result-msg');
+  document.getElementById('ai-thinking').style.display = 'none';
+  msgEl.style.display = 'block';
+  const rivalName = document.getElementById('ai-label').textContent || 'IA';
+
+  if (correct) {
+    state.aiScore += hasDouble ? 2 : 1;
+    msgEl.className = 'result-msg correct';
+    msgEl.textContent = `✅ ${capitalizeFirst(rivalName)} ha acertado`;
+    updateScores();
+    setTimeout(() => showBox(false), 700);
+  } else {
+    if (hasPenalty) state.aiScore = Math.max(0, state.aiScore - 1);
+    if (hasDouble)  state.aiScore = Math.max(0, state.aiScore - 1);
+    msgEl.className = 'result-msg wrong';
+    msgEl.textContent = `❌ ${capitalizeFirst(rivalName)} ha fallado`;
+    updateScores();
+    document.getElementById('ai-next-btn').style.display = 'block';
+  }
+}
+
+function advanceRound() {
+  if (onlineMode) {
+    onlineAdvanceRound();
+    return;
+  }
+  state.round++;
+  if (state.round >= 10) {
+    showResult();
+  } else {
+    showScreen('screen-player');
+    loadPlayerQuestion();
+  }
+}
+
+function renderInventory() {
+  const inv = document.getElementById('player-inventory');
+  if (state.pendingDebuffsForAI.length === 0) {
+    inv.innerHTML = '<span style="font-size:12px;color:var(--muted)">Sin cajas activas</span>';
+  } else {
+    inv.innerHTML = state.pendingDebuffsForAI.map(d => `<span class="badge ${d.color}">${d.icon} ${d.name}</span>`).join('');
+  }
+}
+
+function showResult() {
+  showScreen('screen-result');
+  const p = state.playerScore, a = state.aiScore;
+  const crown = document.getElementById('result-crown');
+  const title = document.getElementById('result-title');
+  const sub   = document.getElementById('result-subtitle');
+  const myName = document.getElementById('final-player-label').textContent || 'Tú';
+  const rivalName = document.getElementById('final-ai-label').textContent || 'Rival';
+
+  if (p > a) {
+    crown.textContent = '🏆';
+    title.textContent = onlineMode ? `¡${myName} gana!` : '¡Has ganado!';
+    sub.textContent   = `${onlineMode ? myName : 'Tú'} superaste a ${rivalName} por ${p - a} punto${p - a !== 1 ? 's' : ''}.`;
+  } else if (a > p) {
+    crown.textContent = onlineMode ? '🎉' : '🤖';
+    title.textContent = onlineMode ? `¡${rivalName} gana!` : 'La IA ha ganado';
+    sub.textContent   = `${rivalName} te superó por ${a - p} punto${a - p !== 1 ? 's' : ''}.`;
+  } else {
+    crown.textContent = '🤝';
+    title.textContent = '¡Empate!';
+    sub.textContent   = 'Ambos igualados. ¡Revancha!';
+  }
+  document.getElementById('boxes-summary').textContent = `Cajas sorpresa abiertas: ${state.totalBoxes}`;
+  updateScores();
+  if (onlineMode) cleanupRoom();
+}
+
+function resetGame() {
+  clearInterval(timerInterval);
+  selectedLevel = null;
+  onlineMode = false;
+  myRole = null;
+  roomCode = null;
+  roomRef = null;
+  roomListener = null;
+  myPlayerKey = null;
+  rivalPlayerKey = null;
+  onlineState = null;
+  document.querySelectorAll('.btn-level').forEach(b => b.classList.remove('selected'));
+  document.getElementById('start-btn').style.display = 'none';
+  showScreen('screen-mode');
+}
+
+/* ═══════════════════════════════════════════════════
+   ONLINE MULTIPLAYER
+═══════════════════════════════════════════════════ */
+
+function setLobbyErr(msg) {
+  document.getElementById('lobby-err').textContent = msg || '';
+}
+
+async function createRoom() {
+  if (!window._fbReady) { setLobbyErr('Conectando con el servidor...'); return; }
+  const name = getPlayerName();
+  const { db, ref, set, serverTimestamp } = fb();
+
+  roomCode = generateCode();
+  roomRef = ref(db, 'rooms/' + roomCode);
+  myRole = 'host';
+  myPlayerKey = 'player1';
+  rivalPlayerKey = 'player2';
+
+  const shuffled = [...QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10);
+
+  await set(roomRef, {
+    status: 'waiting',
+    createdAt: Date.now(),
+    questions: shuffled,
+    player1: { name, score: 0, ready: false },
+    player2: null,
+    round: 0,
+    turn: 'player1',         // whose turn it is
+    phase: 'player_question', // player_question | box | rival_question | rival_box | result
+    debuffsForP1: [],
+    debuffsForP2: [],
+    totalBoxes: 0,
+  });
+
+  document.getElementById('display-room-code').textContent = roomCode;
+  showScreen('screen-waiting');
+  listenRoom();
+}
+
+async function joinRoom() {
+  if (!window._fbReady) { setLobbyErr('Conectando con el servidor...'); return; }
+  const code = (document.getElementById('join-code-input').value || '').trim().toUpperCase();
+  if (code.length < 6) { setLobbyErr('Introduce el código completo (6 caracteres)'); return; }
+  const name = getPlayerName();
+  const { db, ref, get, update } = fb();
+  setLobbyErr('Buscando sala...');
+
+  const snap = await get(ref(db, 'rooms/' + code));
+  if (!snap.exists()) { setLobbyErr('Sala no encontrada. ¿Es correcto el código?'); return; }
+  const data = snap.val();
+  if (data.status !== 'waiting') { setLobbyErr('La sala ya está en juego o ha terminado'); return; }
+  if (data.player2) { setLobbyErr('La sala ya está llena'); return; }
+
+  roomCode = code;
+  roomRef = ref(db, 'rooms/' + roomCode);
+  myRole = 'guest';
+  myPlayerKey = 'player2';
+  rivalPlayerKey = 'player1';
+
+  await update(roomRef, {
+    'player2': { name, score: 0, ready: false },
+    status: 'ready',
+  });
+
+  setLobbyErr('');
+  // Load questions from host
+  state.questions = Object.values(data.questions);
+  listenRoom();
+}
+
+function listenRoom() {
+  if (roomListener) return;
+  const { onValue } = fb();
+  roomListener = onValue(roomRef, (snap) => {
+    if (!snap.exists()) return;
+    const data = snap.val();
+    onlineState = data;
+    handleRoomUpdate(data);
+  });
+}
+
+function handleRoomUpdate(data) {
+  // ── Room starts ──
+  if (data.status === 'ready' && myRole === 'host') {
+    // Both players present — start the game
+    if (data.player1 && data.player2 && !data._started) {
+      startOnlineGame(data);
+    }
+  }
+
+  if (data.status === 'playing') {
+    syncOnlineState(data);
+  }
+
+  if (data.status === 'finished') {
+    showOnlineResult(data);
+  }
+}
+
+async function startOnlineGame(data) {
+  const { update } = fb();
+  // Host initializes game
+  const shuffled = data.questions ? Object.values(data.questions) : [...QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10);
+  state = {
+    questions: shuffled,
+    round: 0,
+    playerScore: 0,
+    aiScore: 0, // rival score
+    pendingDebuffsForAI: [],
+    pendingDebuffsForPlayer: [],
+    totalBoxes: 0,
+    answered: false,
+  };
+
+  await update(roomRef, {
+    status: 'playing',
+    _started: true,
+    round: 0,
+    turn: 'player1',
+    phase: 'player1_question',
+    debuffsForP1: [],
+    debuffsForP2: [],
+    totalBoxes: 0,
+    'player1/score': 0,
+    'player2/score': 0,
+    'player1/answered': false,
+    'player2/answered': false,
+  });
+}
+
+function syncOnlineState(data) {
+  if (!data.player1 || !data.player2) return;
+  const myData    = data[myPlayerKey];
+  const rivalData = data[rivalPlayerKey];
+
+  const p1Name = data.player1.name || 'Jugador 1';
+  const p2Name = data.player2.name || 'Jugador 2';
+  const myName    = myRole === 'host' ? p1Name : p2Name;
+  const rivalName = myRole === 'host' ? p2Name : p1Name;
+
+  setLabels(myName, rivalName);
+
+  // Sync scores
+  state.playerScore = myData.score || 0;
+  state.aiScore     = rivalData.score || 0;
+  state.round       = data.round || 0;
+  state.totalBoxes  = data.totalBoxes || 0;
+
+  const myDebuffs    = (data['debuffsFor' + cap(myPlayerKey)] || []).filter(Boolean);
+  const rivalDebuffs = (data['debuffsFor' + cap(rivalPlayerKey)] || []).filter(Boolean);
+  state.pendingDebuffsForPlayer = myDebuffs;
+  state.pendingDebuffsForAI     = rivalDebuffs;
+
+  const phase = data.phase || '';
+  const questions = data.questions ? Object.values(data.questions) : state.questions;
+  state.questions = questions;
+
+  updateScores();
+
+  const isMyTurn    = data.turn === myPlayerKey;
+  const isRivalTurn = data.turn === rivalPlayerKey;
+
+  // Phase routing
+  if (phase === myPlayerKey + '_question') {
+    if (isMyTurn) {
+      if (document.getElementById('screen-player').classList.contains('active') && state.answered) return;
+      showScreen('screen-player');
+      if (!state.answered) loadPlayerQuestion();
+    }
+  } else if (phase === rivalPlayerKey + '_question') {
+    if (isRivalTurn) {
+      showOnlineRivalTurn(data, rivalName);
+    }
+  } else if (phase === myPlayerKey + '_box') {
+    // I won a box — show it
+    if (document.getElementById('screen-box').classList.contains('active')) return;
+    showBoxOnline(true, rivalDebuffs, rivalName);
+  } else if (phase === rivalPlayerKey + '_box') {
+    // Rival won a box
+    if (document.getElementById('screen-box').classList.contains('active')) return;
+    showBoxOnline(false, myDebuffs, rivalName);
+  } else if (phase === 'result') {
+    showOnlineResult(data);
+  }
+}
+
+function cap(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// Called after player answers in online mode
+async function onlinePlayerAnswer(isCorrect, hasPenalty, hasDouble) {
+  const { update } = fb();
+  let newScore = state.playerScore;
+  if (isCorrect) {
+    newScore += hasDouble ? 2 : 1;
+  } else {
+    if (hasPenalty) newScore = Math.max(0, newScore - 1);
+    if (hasDouble)  newScore = Math.max(0, newScore - 1);
+  }
+
+  const updates = {
+    [`${myPlayerKey}/score`]: newScore,
+    [`${myPlayerKey}/answered`]: true,
+    [`${myPlayerKey}/lastCorrect`]: isCorrect,
+  };
+
+  if (isCorrect) {
+    // Give rival debuffs
+    const boxes = getBoxes();
+    state.totalBoxes += boxes.length;
+    updates.totalBoxes = state.totalBoxes;
+    updates['debuffsFor' + cap(rivalPlayerKey)] = boxes;
+    updates.phase = myPlayerKey + '_box';
+  } else {
+    // Rival's turn
+    updates.phase = rivalPlayerKey + '_question';
+    updates.turn  = rivalPlayerKey;
+  }
+
+  state.playerScore = newScore;
+  updateScores();
+  await update(roomRef, updates);
+}
+
+async function onlineRivalTurnStart(boxes) {
+  // Host/guest presses continue after box reveal
+  const { update } = fb();
+  await update(roomRef, {
+    phase: rivalPlayerKey + '_question',
+    turn: rivalPlayerKey,
+  });
+}
+
+function showBoxOnline(iWon, debuffs, rivalName) {
+  const validDebuffs = (debuffs || []).filter(d => d && d.id);
+  const content = document.getElementById('box-reveal-content');
+  const btn = document.getElementById('box-continue-btn');
+
+  if (iWon) {
+    content.innerHTML = `
+      <span class="box-emoji">${validDebuffs.length ? validDebuffs.map(b => b.icon).join('') : '📦'}</span>
+      <h3 style="margin-bottom:8px">¡Caja ganada!</h3>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:14px">${capitalizeFirst(rivalName)} sufrirá estas desventajas:</p>
+      <div>${validDebuffs.map(b => `<span class="badge ${b.color}">${b.icon} ${b.name}: ${b.desc}</span>`).join('') || '<span style="color:var(--muted);font-size:13px">Sin desventajas</span>'}</div>
+    `;
+    btn.textContent = 'Turno del rival →';
+    btn.onclick = () => onlineRivalTurnStart(validDebuffs);
+  } else {
+    content.innerHTML = `
+      <span class="box-emoji">${validDebuffs.length ? validDebuffs.map(b => b.icon).join('') : '📦'}</span>
+      <h3 style="margin-bottom:8px">${capitalizeFirst(rivalName)} ganó una caja</h3>
+      <p style="color:var(--muted);font-size:14px;margin-bottom:14px">Sufrirás estas desventajas:</p>
+      <div>${validDebuffs.map(b => `<span class="badge ${b.color}">${b.icon} ${b.name}: ${b.desc}</span>`).join('') || '<span style="color:var(--muted);font-size:13px">Sin desventajas</span>'}</div>
+    `;
+    btn.textContent = 'Mi turno →';
+    btn.onclick = () => onlineAdvanceRound();
+  }
+  updateScores();
+  showScreen('screen-box');
+}
+
+function showOnlineRivalTurn(data, rivalName) {
+  if (document.getElementById('screen-ai').classList.contains('active')) return;
+  showScreen('screen-ai');
+  clearInterval(timerInterval);
+
+  const q = state.questions[state.round];
+  const aiDebuffs = state.pendingDebuffsForAI || [];
+
+  document.getElementById('ai-round-label').textContent = `Turno de ${rivalName} — Ronda ${state.round + 1} de 10`;
+
+  const aidEl = document.getElementById('ai-debuff-display');
+  if (aiDebuffs.length > 0) {
+    aidEl.style.display = 'block';
+    aidEl.innerHTML = `<strong>Desventajas de ${rivalName}:</strong> ${aiDebuffs.map(d => `${d.icon} ${d.name}`).join(', ')}`;
+  } else {
+    aidEl.style.display = 'none';
+  }
+
+  document.getElementById('ai-question-text').textContent = q ? q.q : '';
+  document.getElementById('ai-thinking').style.display = 'block';
+  document.getElementById('ai-thinking-label').textContent = `${rivalName} está pensando...`;
+  document.getElementById('ai-result-msg').style.display = 'none';
+  document.getElementById('ai-next-btn').style.display = 'none';
+  document.getElementById('online-rival-answers').style.display = 'none';
+
+  const hasTime = (aiDebuffs || []).some(d => d.id === 'time');
+  const secs = hasTime ? 8 : 20;
+  startTimer('ai-timer-bar', secs, false, () => {});
+
+  // Watch for rival's answer
+  watchRivalAnswer(rivalName);
+}
+
+function watchRivalAnswer(rivalName) {
+  // The onValue listener will call syncOnlineState which handles phase changes.
+  // We just watch for the rival's answered flag via the existing listener.
+  // We poll onlineState for changes on rival's answered flag:
+  let prevPhase = onlineState ? onlineState.phase : null;
+  const checkInterval = setInterval(() => {
+    if (!onlineState) return;
+    const newPhase = onlineState.phase;
+    if (newPhase !== prevPhase) {
+      clearInterval(checkInterval);
+      // The onValue listener will route correctly.
+    }
+    // If rival answered (phase changed to box or next player question)
+    if (onlineState[rivalPlayerKey] && onlineState[rivalPlayerKey].answered) {
+      const isCorrect = onlineState[rivalPlayerKey].lastCorrect;
+      clearInterval(checkInterval);
+      clearInterval(timerInterval);
+      resolveOnlineRival(isCorrect, rivalName);
+    }
+  }, 400);
+}
+
+function resolveOnlineRival(correct, rivalName) {
+  const msgEl = document.getElementById('ai-result-msg');
+  document.getElementById('ai-thinking').style.display = 'none';
+  msgEl.style.display = 'block';
+
+  if (correct) {
+    msgEl.className = 'result-msg correct';
+    msgEl.textContent = `✅ ${capitalizeFirst(rivalName)} ha acertado`;
+    // Box screen will show via phase update
+  } else {
+    msgEl.className = 'result-msg wrong';
+    msgEl.textContent = `❌ ${capitalizeFirst(rivalName)} ha fallado`;
+    document.getElementById('ai-next-btn').style.display = 'block';
+    document.getElementById('ai-next-btn').onclick = () => onlineAdvanceRound();
+  }
+  updateScores();
+}
+
+async function onlineAdvanceRound() {
+  const { update } = fb();
+  const nextRound = state.round + 1;
+
+  if (nextRound >= 10) {
+    await update(roomRef, {
+      phase: 'result',
+      status: 'finished',
+    });
+    return;
+  }
+
+  await update(roomRef, {
+    round: nextRound,
+    phase: 'player1_question',
+    turn: 'player1',
+    debuffsForPlayer1: [],
+    debuffsForPlayer2: [],
+    'player1/answered': false,
+    'player2/answered': false,
+    'player1/lastCorrect': null,
+    'player2/lastCorrect': null,
+  });
+  // For non-host, state will update via listener
+  if (myRole === 'host') {
+    state.round = nextRound;
+    state.pendingDebuffsForPlayer = [];
+    state.pendingDebuffsForAI = [];
+    state.answered = false;
+    showScreen('screen-player');
+    loadPlayerQuestion();
+  }
+}
+
+function showOnlineResult(data) {
+  if (!data.player1 || !data.player2) return;
+  const myScore    = (data[myPlayerKey] || {}).score || 0;
+  const rivalScore = (data[rivalPlayerKey] || {}).score || 0;
+  state.playerScore = myScore;
+  state.aiScore     = rivalScore;
+  state.totalBoxes  = data.totalBoxes || 0;
+  updateScores();
+  showResult();
+}
+
+function leaveRoom() {
+  cleanupRoom();
+  showScreen('screen-mode');
+}
+
+function cleanupRoom() {
+  clearInterval(timerInterval);
+  if (roomListener && roomRef) {
+    const { off } = fb();
+    try { off(roomRef); } catch(e) {}
+  }
+  roomListener = null;
+  // Don't delete the room — let it expire naturally
+}
+
+/* ─── Wait for Firebase before enabling online buttons ─── */
+document.addEventListener('fbReady', () => {
+  // Firebase is ready — nothing extra needed, buttons already work
+});
+
+// Expose all needed functions to global scope
+window.showScreen = showScreen;
+window.chooseMode = chooseMode;
+window.selectLevel = selectLevel;
+window.startGame = startGame;
+window.advanceRound = advanceRound;
+window.resetGame = resetGame;
+window.playerAnswer = playerAnswer;
+window.createRoom = createRoom;
+window.joinRoom = joinRoom;
+window.copyCode = copyCode;
+window.leaveRoom = leaveRoom;
+</script>
+</body>
+</html>
