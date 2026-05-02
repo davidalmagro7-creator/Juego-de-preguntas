@@ -34,16 +34,51 @@
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
+    overflow-x: hidden;
+  }
+  #sections-wrapper {
+    display: flex;
+    width: 300vw;
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  #section-game {
+    width: 100vw;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding: 0;
+    flex-shrink: 0;
+  }
+  #section-missions {
+    width: 100vw;
+    min-height: 100vh;
+    flex-shrink: 0;
+    max-width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #section-missions > * {
+    width: 100%;
+    max-width: 430px;
+  }
+  #section-rank {
+    width: 100vw;
+    min-height: 100vh;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #section-rank > * {
+    width: 100%;
+    max-width: 430px;
   }
   #app {
     width: 100%;
     max-width: 430px;
     min-height: 100vh;
-    padding: 20px 16px 40px;
+    padding: 20px 16px 100px;
     position: relative;
   }
   .screen { display: none; }
@@ -322,9 +357,386 @@
 
   .online-answers { opacity: 1; }
   .online-answers.disabled button { pointer-events: none; opacity: 0.45; }
+
+  /* ── RANK BADGE (fixed top-left) ── */
+  #rank-badge {
+    position: fixed;
+    top: 14px;
+    left: 16px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 99px;
+    padding: 5px 12px 5px 6px;
+    z-index: 1000;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    user-select: none;
+  }
+  #rank-badge:hover { border-color: rgba(255,255,255,0.25); }
+  #rank-badge .rank-emblem { font-size: 20px; line-height: 1; }
+  #rank-badge .rank-info { display: flex; flex-direction: column; line-height: 1.2; }
+  #rank-badge .rank-name  { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; }
+  #rank-badge .rank-level { font-size: 10px; color: var(--muted); }
+
+  /* ── LEVEL-UP MODAL ── */
+  #levelup-modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2000;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+    padding: 20px;
+  }
+  #levelup-modal.show { opacity: 1; pointer-events: all; }
+  .levelup-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 32px 24px;
+    text-align: center;
+    max-width: 340px;
+    width: 100%;
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .levelup-emblem { font-size: 64px; display: block; margin-bottom: 12px; }
+  .levelup-title  { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .levelup-rank   { font-size: 15px; color: var(--muted); margin-bottom: 18px; }
+  .levelup-xp-info { font-size: 13px; color: var(--purple); margin-bottom: 20px; }
+  .levelup-close  {
+    width: 100%; padding: 12px;
+    background: var(--purple-bg); border: 1px solid var(--purple-dim); color: var(--purple);
+    border-radius: var(--radius-sm); font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .levelup-close:hover { background: rgba(167,139,250,0.2); }
+
+  /* ── XP GAIN TOAST ── */
+  #xp-toast {
+    position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
+    background: rgba(167,139,250,0.15);
+    border: 1px solid var(--purple-dim);
+    color: var(--purple);
+    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+    padding: 7px 16px; border-radius: 99px;
+    z-index: 1500; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s, top 0.3s;
+    white-space: nowrap;
+  }
+  #xp-toast.show { opacity: 1; top: 70px; }
+
+  /* ── PROFILE / RANK SECTION ── */
+  .rank-section-header {
+    text-align: center;
+    padding: 28px 0 20px;
+  }
+  .rank-section-header .big-emblem { font-size: 72px; display: block; margin-bottom: 8px; filter: drop-shadow(0 0 20px rgba(167,139,250,0.4)); }
+  .rank-section-header .rank-title-big { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; }
+  .rank-section-header .rank-sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+  .xp-bar-wrap { margin: 0 0 14px; }
+  .xp-bar-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .xp-bar-label .xp-current { color: var(--purple); font-weight: 600; }
+  .xp-bar-track { height: 8px; background: var(--surface2); border-radius: 99px; overflow: hidden; }
+  .xp-bar-fill  { height: 100%; background: linear-gradient(90deg, #7c3aed, #a78bfa); border-radius: 99px; transition: width 0.6s cubic-bezier(0.25,0.46,0.45,0.94); }
+
+  .rank-tier-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;
+  }
+  .rank-tier-card {
+    background: var(--surface2); border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 10px; text-align: center;
+    transition: border-color 0.2s;
+  }
+  .rank-tier-card.current-tier { border-color: var(--purple); background: var(--purple-bg); }
+  .rank-tier-card.unlocked     { border-color: rgba(74,222,128,0.25); }
+  .rank-tier-card .tier-emblem { font-size: 26px; display: block; margin-bottom: 4px; }
+  .rank-tier-card .tier-name   { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; }
+  .rank-tier-card .tier-levels { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .rank-tier-card.locked .tier-emblem { filter: grayscale(1); opacity: 0.4; }
+  .rank-tier-card.locked .tier-name   { color: var(--muted); }
+
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .stat-cell { background: var(--surface2); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 8px; text-align: center; }
+  .stat-cell .stat-num { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--text); }
+  .stat-cell .stat-lbl { font-size: 10px; color: var(--muted); margin-top: 3px; }
+  #coin-counter {
+    position: fixed;
+    top: 14px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(251,191,36,0.12);
+    border: 1px solid rgba(251,191,36,0.35);
+    border-radius: 99px;
+    padding: 6px 12px 6px 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--amber);
+    z-index: 1000;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  #coin-counter:hover { background: rgba(251,191,36,0.2); }
+  #coin-counter .coin-icon { font-size: 18px; }
+  #coin-counter.coin-bump {
+    animation: coinBump 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes coinBump {
+    0%{transform:scale(1)} 40%{transform:scale(1.3)} 100%{transform:scale(1)}
+  }
+
+  /* ── SECTION NAVIGATOR ── */
+  .nav-arrow-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 50%;
+    transform: translateX(50%);
+    background: rgba(167,139,250,0.15);
+    border: 1px solid var(--purple-dim);
+    color: var(--purple);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 22px;
+    border-radius: 99px;
+    cursor: pointer;
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-arrow-btn:hover { background: rgba(167,139,250,0.25); }
+  .nav-arrow-btn.hidden { opacity: 0; pointer-events: none; }
+
+  /* ── MISSIONS SECTION ── */
+  .missions-header {
+    padding: 32px 0 20px;
+    text-align: center;
+  }
+  .missions-header .header-icon { font-size: 48px; display: block; margin-bottom: 10px; }
+  .missions-header h2 { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; }
+  .missions-header p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+  .mission-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .mission-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 99px 0 0 99px;
+    background: var(--purple);
+    opacity: 0.5;
+  }
+  .mission-card.completed { border-color: rgba(74,222,128,0.3); }
+  .mission-card.completed::before { background: var(--green); opacity: 1; }
+  .mission-card.claimed { opacity: 0.5; }
+  .mission-card.claimed::before { background: var(--muted); }
+
+  .mission-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .mission-info { flex: 1; }
+  .mission-icon { font-size: 22px; margin-bottom: 4px; display: block; }
+  .mission-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+  .mission-desc { font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .mission-reward {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--amber);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .mission-progress-wrap { margin-bottom: 10px; }
+  .mission-progress-bar {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 5px;
+  }
+  .mission-progress-fill {
+    height: 100%;
+    background: var(--purple);
+    border-radius: 99px;
+    transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .mission-card.completed .mission-progress-fill { background: var(--green); }
+  .mission-progress-text { font-size: 11px; color: var(--muted); }
+
+  .mission-claim-btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(74,222,128,0.4);
+    background: var(--green-bg);
+    color: var(--green);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .mission-claim-btn:hover { background: rgba(74,222,128,0.18); }
+  .mission-claim-btn:active { transform: scale(0.98); }
+  .mission-claimed-badge {
+    width: 100%;
+    padding: 8px;
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+    font-weight: 500;
+  }
+
+  .missions-refresh-hint {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 16px;
+    padding-bottom: 20px;
+  }
+
+  /* Mission category tabs */
+  .mission-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .mission-tab {
+    flex: 1;
+    padding: 10px 6px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border2);
+    background: var(--surface2);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .mission-tab:hover { background: #25253a; color: var(--text); }
+  .mission-tab.active {
+    background: var(--purple-bg);
+    border-color: var(--purple-dim);
+    color: var(--purple);
+    font-weight: 600;
+  }
+  .tab-timer {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+    font-family: 'DM Sans', monospace;
+  }
+  .mission-tab.active .tab-timer { color: rgba(167,139,250,0.6); }
+
+  /* Category label above missions */
+  .missions-category-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 0 2px;
+  }
+  .missions-category-label .cat-icon { font-size: 16px; }
+  .missions-category-label .cat-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .missions-category-label .cat-reset {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* Swipe hint for mobile */
+  .swipe-hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 8px;
+    opacity: 0.7;
+  }
+  @media (min-width: 600px) { .swipe-hint { display: none; } }
 </style>
 </head>
 <body>
+
+<!-- RANK BADGE (fixed top-left) -->
+<div id="rank-badge" onclick="showSection('rank')">
+  <span class="rank-emblem" id="hud-rank-emblem">🪖</span>
+  <div class="rank-info">
+    <span class="rank-name" id="hud-rank-name">Recluta</span>
+    <span class="rank-level" id="hud-rank-level">Nv. 1</span>
+  </div>
+</div>
+
+<!-- XP TOAST -->
+<div id="xp-toast">+0 XP</div>
+
+<!-- LEVEL-UP MODAL -->
+<div id="levelup-modal">
+  <div class="levelup-card">
+    <span class="levelup-emblem" id="lu-emblem">🎖️</span>
+    <div class="levelup-title" id="lu-title">¡Subiste de nivel!</div>
+    <div class="levelup-rank"  id="lu-rank">Nivel 2</div>
+    <div class="levelup-xp-info" id="lu-xp-info"></div>
+    <button class="levelup-close" onclick="closeLevelUpModal()">¡Genial! →</button>
+  </div>
+</div>
+
+<!-- COIN COUNTER (fixed, always visible) -->
+<div id="coin-counter" onclick="showSection('missions')">
+  <span class="coin-icon">🪙</span>
+  <span id="coin-display">0</span>
+</div>
+
+<!-- NAVIGATION BUTTON (bottom center) -->
+<button class="nav-arrow-btn" id="nav-btn" onclick="toggleSection()">
+  <span id="nav-btn-text">🎯 Misiones</span>
+</button>
+
+<div id="sections-wrapper">
+
+<!-- ═══════ SECTION: GAME ═══════ -->
+<div id="section-game">
 <div id="app">
 
 <!-- ═══════════ MODO DE JUEGO ═══════════ -->
@@ -502,12 +914,98 @@
       <div class="score-box"><div class="score-num" id="final-ai-score">0</div><div class="score-sub" id="final-ai-label">IA</div></div>
     </div>
     <div class="divider"></div>
-    <p id="boxes-summary" style="font-size:13px;color:var(--muted);margin-bottom:20px"></p>
+    <p id="boxes-summary" style="font-size:13px;color:var(--muted);margin-bottom:8px"></p>
+    <p id="xp-summary" style="font-size:13px;color:var(--purple);margin-bottom:20px;font-weight:600"></p>
     <button class="btn btn-primary" onclick="resetGame()">Jugar de nuevo →</button>
   </div>
 </div>
 
+</div><!-- /app -->
+</div><!-- /section-game -->
+
+<!-- ═══════ SECTION: MISSIONS ═══════ -->
+<div id="section-missions" style="padding:20px 16px 100px">
+  <div class="missions-header">
+    <span class="header-icon">🎯</span>
+    <h2>Misiones</h2>
+    <p>Completa misiones y gana monedas</p>
+  </div>
+
+  <div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px">
+    <div>
+      <div class="label" style="margin-bottom:4px">Tu saldo</div>
+      <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--amber);display:flex;align-items:center;gap:8px">
+        🪙 <span id="coins-big">0</span>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div class="label" style="margin-bottom:4px">Misiones hoy</div>
+      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--purple)"><span id="missions-completed-count">0</span> / <span id="missions-total-count">0</span></div>
+    </div>
+  </div>
+
+  <!-- Category tabs -->
+  <div class="mission-tabs">
+    <button class="mission-tab active" id="tab-daily" onclick="switchMissionTab('daily')">
+      ☀️ Diarias
+      <span class="tab-timer" id="timer-daily"></span>
+    </button>
+    <button class="mission-tab" id="tab-weekly" onclick="switchMissionTab('weekly')">
+      📅 Semanales
+      <span class="tab-timer" id="timer-weekly"></span>
+    </button>
+    <button class="mission-tab" id="tab-event" onclick="switchMissionTab('event')">
+      ⭐ Evento
+    </button>
+  </div>
+
+  <div id="missions-list"></div>
+
+  <div id="event-empty" style="display:none;text-align:center;padding:40px 20px">
+    <div style="font-size:48px;margin-bottom:14px">🌙</div>
+    <div style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:8px">Sin evento activo</div>
+    <div style="color:var(--muted);font-size:13px;line-height:1.6">Próximamente habrá eventos especiales con misiones únicas y recompensas exclusivas. ¡Vuelve pronto!</div>
+  </div>
+
+  <div style="padding-bottom:20px;margin-top:8px">
+    <button class="btn" onclick="showSection('game')" style="text-align:center">← Volver al juego</button>
+  </div>
 </div>
+
+<!-- ═══════ SECTION: RANK ═══════ -->
+<div id="section-rank" style="padding:20px 16px 100px">
+  <div class="rank-section-header">
+    <span class="big-emblem" id="rank-big-emblem">🪖</span>
+    <div class="rank-title-big" id="rank-title-big">Recluta</div>
+    <div class="rank-sub" id="rank-sub">Nivel 1 · 0 XP total</div>
+  </div>
+
+  <div class="card" style="padding:16px 18px">
+    <div class="xp-bar-label">
+      <span class="xp-current" id="xp-current-label">0 XP</span>
+      <span id="xp-next-label">100 XP para nivel 2</span>
+    </div>
+    <div class="xp-bar-track">
+      <div class="xp-bar-fill" id="xp-bar-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <p class="label" style="margin:14px 0 10px 2px">Rangos</p>
+  <div class="rank-tier-grid" id="rank-tier-grid"></div>
+
+  <p class="label" style="margin:14px 0 10px 2px">Tus estadísticas</p>
+  <div class="stats-grid">
+    <div class="stat-cell"><div class="stat-num" id="stat-total-games">0</div><div class="stat-lbl">Partidas</div></div>
+    <div class="stat-cell"><div class="stat-num" id="stat-total-wins">0</div><div class="stat-lbl">Victorias</div></div>
+    <div class="stat-cell"><div class="stat-num" id="stat-total-xp">0</div><div class="stat-lbl">XP total</div></div>
+  </div>
+
+  <div style="margin-top:4px">
+    <button class="btn" onclick="showSection('game')" style="text-align:center">← Volver al juego</button>
+  </div>
+</div>
+
+</div><!-- /sections-wrapper -->
 
 <!-- Firebase -->
 <script type="module">
@@ -995,6 +1493,32 @@ function showResult() {
   document.getElementById('boxes-summary').textContent = `Cajas sorpresa abiertas: ${state.totalBoxes}`;
   updateScores();
   if (onlineMode) cleanupRoom();
+
+  // Record game stats for missions
+  setTimeout(() => {
+    if (typeof recordGameResult === 'function') {
+      const won = p > a;
+      const lvl = state.level || 'facil';
+      const isOnline = onlineMode;
+      let xpKey;
+      if (isOnline) { xpKey = won ? 'win_online' : 'lose_online'; }
+      else if (won) {
+        xpKey = lvl === 'crack' ? 'win_vs_ai_crack' : lvl === 'listo' ? 'win_vs_ai_hard' : lvl === 'mediano' ? 'win_vs_ai_medium' : 'win_vs_ai_easy';
+      } else { xpKey = 'lose_vs_ai'; }
+      const xpGained = (typeof XP_REWARDS !== 'undefined' ? XP_REWARDS[xpKey] : 0) || 10;
+      const xpSumEl = document.getElementById('xp-summary');
+      if (xpSumEl) xpSumEl.textContent = `+${xpGained} XP ganados ⭐`;
+
+      recordGameResult({
+        won,
+        correctAnswers: p,
+        boxesOpened: state.totalBoxes || 0,
+        isOnline,
+        currentStreak: p,
+        isCrackMode: !isOnline && lvl === 'crack',
+      });
+    }
+  }, 100);
 }
 
 function resetGame() {
@@ -1426,6 +1950,568 @@ window.createRoom = createRoom;
 window.joinRoom = joinRoom;
 window.copyCode = copyCode;
 window.leaveRoom = leaveRoom;
+
+/* ═══════════════════════════════════════════════════
+   COINS & MISSIONS SYSTEM
+═══════════════════════════════════════════════════ */
+
+// Coin persistence via localStorage
+function getCoins() {
+  return parseInt(localStorage.getItem('trivia_coins') || '0', 10);
+}
+function setCoins(n) {
+  localStorage.setItem('trivia_coins', String(n));
+  updateCoinDisplay();
+}
+function addCoins(amount) {
+  const newTotal = getCoins() + amount;
+  setCoins(newTotal);
+  const el = document.getElementById('coin-counter');
+  el.classList.remove('coin-bump');
+  void el.offsetWidth;
+  el.classList.add('coin-bump');
+}
+function updateCoinDisplay() {
+  const c = getCoins();
+  document.getElementById('coin-display').textContent = c;
+  const big = document.getElementById('coins-big');
+  if (big) big.textContent = c;
+}
+
+/* ── MISSION DEFINITIONS ── */
+
+// Daily missions pool — 3 shown per day, low rewards (5–15 coins)
+const DAILY_POOL = [
+  { id: 'd_play1',    icon: '🎮', title: 'Calentar motores',   desc: 'Completa 1 partida hoy',                    target: 1,  reward: 8,  type: 'games_played' },
+  { id: 'd_win1',     icon: '🏆', title: 'Victoria del día',   desc: 'Gana 1 partida hoy',                        target: 1,  reward: 12, type: 'wins' },
+  { id: 'd_correct5', icon: '✅', title: 'Buen ojo',           desc: 'Acierta 5 preguntas hoy',                   target: 5,  reward: 10, type: 'correct_total' },
+  { id: 'd_boxes2',   icon: '📦', title: 'Cazaboxes',          desc: 'Abre 2 cajas sorpresa hoy',                 target: 2,  reward: 8,  type: 'boxes_opened' },
+  { id: 'd_streak3',  icon: '💫', title: 'Racha corta',        desc: 'Acierta 3 seguidas en una partida hoy',     target: 3,  reward: 12, type: 'current_streak' },
+  { id: 'd_correct3', icon: '🎯', title: 'Certero',            desc: 'Acierta 3 preguntas en una partida',        target: 3,  reward: 8,  type: 'correct_total' },
+  { id: 'd_play2',    icon: '🔄', title: 'Doble sesión',       desc: 'Completa 2 partidas hoy',                   target: 2,  reward: 15, type: 'games_played' },
+  { id: 'd_online1',  icon: '🌐', title: 'Conexión online',    desc: 'Juega 1 partida online hoy',                target: 1,  reward: 15, type: 'online_games' },
+];
+
+// Weekly missions pool — ~10 shown per week, higher rewards (25–80 coins)
+const WEEKLY_POOL = [
+  { id: 'w_play5',     icon: '🔥', title: 'Jugador habitual',   desc: 'Completa 5 partidas esta semana',           target: 5,  reward: 30, type: 'games_played' },
+  { id: 'w_play10',    icon: '⚡', title: 'Sin descanso',       desc: 'Completa 10 partidas esta semana',          target: 10, reward: 55, type: 'games_played' },
+  { id: 'w_win3',      icon: '🥇', title: 'Campeón semanal',    desc: 'Gana 3 partidas esta semana',               target: 3,  reward: 35, type: 'wins' },
+  { id: 'w_win7',      icon: '👑', title: 'Imbatible',          desc: 'Gana 7 partidas esta semana',               target: 7,  reward: 70, type: 'wins' },
+  { id: 'w_correct20', icon: '🎯', title: 'Experto',            desc: 'Acierta 20 preguntas esta semana',          target: 20, reward: 35, type: 'correct_total' },
+  { id: 'w_correct50', icon: '🧠', title: 'Erudito',            desc: 'Acierta 50 preguntas esta semana',          target: 50, reward: 75, type: 'correct_total' },
+  { id: 'w_boxes10',   icon: '📦', title: 'Coleccionista',      desc: 'Abre 10 cajas sorpresa esta semana',        target: 10, reward: 30, type: 'boxes_opened' },
+  { id: 'w_boxes20',   icon: '🎁', title: 'Maestro de cajas',   desc: 'Abre 20 cajas sorpresa esta semana',        target: 20, reward: 50, type: 'boxes_opened' },
+  { id: 'w_online3',   icon: '🌐', title: 'Multijugador pro',   desc: 'Juega 3 partidas online esta semana',       target: 3,  reward: 40, type: 'online_games' },
+  { id: 'w_perfect',   icon: '⭐', title: 'Partida perfecta',   desc: 'Acierta las 10 preguntas de 1 partida',     target: 10, reward: 80, type: 'best_streak' },
+  { id: 'w_streak5',   icon: '💥', title: 'Racha imparable',    desc: 'Acierta 5 seguidas en una partida',         target: 5,  reward: 40, type: 'current_streak' },
+  { id: 'w_crack',     icon: '🤖', title: 'Cazador de IAs',     desc: 'Vence a la IA en modo Inteligentísimo',     target: 1,  reward: 60, type: 'wins_crack' },
+];
+
+/* ── PERIODIC RESET LOGIC ── */
+// Returns the start of today (midnight local time) as timestamp
+function getTodayStart() {
+  const d = new Date(); d.setHours(0,0,0,0); return d.getTime();
+}
+// Returns the start of current week (Monday midnight) as timestamp
+function getWeekStart() {
+  const d = new Date(); d.setHours(0,0,0,0);
+  const day = d.getDay(); // 0=Sun,1=Mon...
+  const diff = (day === 0 ? -6 : 1 - day);
+  d.setDate(d.getDate() + diff);
+  return d.getTime();
+}
+
+function getDailyState() {
+  try { return JSON.parse(localStorage.getItem('trivia_daily') || 'null'); } catch { return null; }
+}
+function saveDailyState(obj) { localStorage.setItem('trivia_daily', JSON.stringify(obj)); }
+
+function getWeeklyState() {
+  try { return JSON.parse(localStorage.getItem('trivia_weekly') || 'null'); } catch { return null; }
+}
+function saveWeeklyState(obj) { localStorage.setItem('trivia_weekly', JSON.stringify(obj)); }
+
+// Deterministic shuffle using a seed (day/week number ensures same 3/10 for everyone)
+function seededShuffle(arr, seed) {
+  const a = [...arr];
+  let s = seed;
+  for (let i = a.length - 1; i > 0; i--) {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    const j = Math.abs(s) % (i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function initDailyMissions() {
+  const todayStart = getTodayStart();
+  let ds = getDailyState();
+  if (!ds || ds.periodStart !== todayStart) {
+    // New day — pick 3 missions and reset progress
+    const daySeed = Math.floor(todayStart / 86400000);
+    const picked  = seededShuffle(DAILY_POOL, daySeed).slice(0, 3);
+    ds = {
+      periodStart: todayStart,
+      missions: picked,
+      progress: {},   // id → current value
+      claimed: [],    // ids claimed this period
+    };
+    saveDailyState(ds);
+  }
+  return ds;
+}
+
+function initWeeklyMissions() {
+  const weekStart = getWeekStart();
+  let ws = getWeeklyState();
+  if (!ws || ws.periodStart !== weekStart) {
+    const weekSeed = Math.floor(weekStart / (86400000 * 7));
+    const picked   = seededShuffle(WEEKLY_POOL, weekSeed).slice(0, 10);
+    ws = {
+      periodStart: weekStart,
+      missions: picked,
+      progress: {},
+      claimed: [],
+    };
+    saveWeeklyState(ws);
+  }
+  return ws;
+}
+
+/* ── STATS TRACKING ── */
+function getStats() {
+  try { return JSON.parse(localStorage.getItem('trivia_stats') || '{}'); } catch { return {}; }
+}
+function saveStats(s) { localStorage.setItem('trivia_stats', JSON.stringify(s)); }
+
+function recordGameResult({ won, correctAnswers, boxesOpened, isOnline, currentStreak, isCrackMode }) {
+  const s = getStats();
+  s.games_played   = (s.games_played   || 0) + 1;
+  s.correct_total  = (s.correct_total  || 0) + (correctAnswers || 0);
+  s.wins           = (s.wins           || 0) + (won ? 1 : 0);
+  s.boxes_opened   = (s.boxes_opened   || 0) + (boxesOpened || 0);
+  s.online_games   = (s.online_games   || 0) + (isOnline ? 1 : 0);
+  s.best_streak    = Math.max(s.best_streak || 0, correctAnswers || 0);
+  s.current_streak = Math.max(s.current_streak || 0, currentStreak || 0);
+  if (won && isCrackMode) s.wins_crack = (s.wins_crack || 0) + 1;
+  saveStats(s);
+
+  // Award XP
+  let xpKey, xpReason;
+  if (isOnline) {
+    xpKey    = won ? 'win_online' : 'lose_online';
+    xpReason = won ? 'Victoria online' : 'Partida online';
+  } else {
+    const lvl = typeof state !== 'undefined' ? state.level : 'facil';
+    if (won) {
+      xpKey = lvl === 'crack' ? 'win_vs_ai_crack'
+            : lvl === 'listo' ? 'win_vs_ai_hard'
+            : lvl === 'mediano' ? 'win_vs_ai_medium'
+            : 'win_vs_ai_easy';
+      xpReason = 'Victoria';
+    } else {
+      xpKey    = 'lose_vs_ai';
+      xpReason = 'Partida completada';
+    }
+  }
+  if (typeof addXP === 'function') addXP(XP_REWARDS[xpKey] || 10, xpReason);
+
+  // Update periodic progress
+  updatePeriodProgress(s);
+  renderMissions();
+}
+
+function updatePeriodProgress(stats) {
+  const ds = getDailyState();
+  if (ds) {
+    ds.missions.forEach(m => {
+      ds.progress[m.id] = Math.min(stats[m.type] || 0, m.target);
+    });
+    // Store absolute base to track delta
+    if (!ds.baseStats) ds.baseStats = {};
+    saveDailyState(ds);
+  }
+  const ws = getWeeklyState();
+  if (ws) {
+    ws.missions.forEach(m => {
+      ws.progress[m.id] = Math.min(stats[m.type] || 0, m.target);
+    });
+    saveWeeklyState(ws);
+  }
+}
+
+/* ── CLAIM ── */
+function claimMission(id, period) {
+  const stats = getStats();
+  let periodState, saveFn;
+  if (period === 'daily') { periodState = getDailyState(); saveFn = saveDailyState; }
+  else                    { periodState = getWeeklyState(); saveFn = saveWeeklyState; }
+  if (!periodState || periodState.claimed.includes(id)) return;
+
+  const m = periodState.missions.find(x => x.id === id);
+  if (!m) return;
+  const val = periodState.progress[m.id] || 0;
+  if (val < m.target) return;
+
+  periodState.claimed.push(id);
+  saveFn(periodState);
+  addCoins(m.reward);
+  // Award XP for completing a mission
+  const xpGain = periodKey === 'daily' ? XP_REWARDS.mission_daily : XP_REWARDS.mission_weekly;
+  if (typeof addXP === 'function') addXP(xpGain, `Misión ${periodKey === 'daily' ? 'diaria' : 'semanal'}`);
+  renderMissions();
+}
+window.claimMission = claimMission;
+
+/* ── RENDER ── */
+let activeMissionTab = 'daily';
+
+function switchMissionTab(tab) {
+  activeMissionTab = tab;
+  document.querySelectorAll('.mission-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  renderMissions();
+}
+window.switchMissionTab = switchMissionTab;
+
+function formatTimeLeft(msLeft) {
+  if (msLeft <= 0) return 'Renovando...';
+  const s = Math.floor(msLeft / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (h > 23) {
+    const d = Math.floor(h / 24);
+    return `${d}d ${h % 24}h`;
+  }
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+function updateTabTimers() {
+  const now = Date.now();
+  const dailyLeft  = getTodayStart() + 86400000 - now;
+  const weeklyLeft = getWeekStart()  + 86400000 * 7 - now;
+  const dt = document.getElementById('timer-daily');
+  const wt = document.getElementById('timer-weekly');
+  if (dt) dt.textContent = formatTimeLeft(dailyLeft);
+  if (wt) wt.textContent = formatTimeLeft(weeklyLeft);
+}
+
+function renderMissions() {
+  updateTabTimers();
+  const eventEmpty = document.getElementById('event-empty');
+  const list       = document.getElementById('missions-list');
+  if (!list) return;
+
+  if (activeMissionTab === 'event') {
+    list.innerHTML = '';
+    if (eventEmpty) eventEmpty.style.display = 'block';
+    return;
+  }
+  if (eventEmpty) eventEmpty.style.display = 'none';
+
+  const isDaily   = activeMissionTab === 'daily';
+  const pState    = isDaily ? initDailyMissions() : initWeeklyMissions();
+  const saveFn    = isDaily ? saveDailyState : saveWeeklyState;
+  const periodKey = isDaily ? 'daily' : 'weekly';
+  const stats     = getStats();
+
+  // Sync progress from global stats
+  pState.missions.forEach(m => {
+    pState.progress[m.id] = Math.min(stats[m.type] || 0, m.target);
+  });
+  saveFn(pState);
+
+  let claimedCount = 0;
+  const html = pState.missions.map(m => {
+    const val       = pState.progress[m.id] || 0;
+    const pct       = Math.round((val / m.target) * 100);
+    const done      = val >= m.target;
+    const isClaimed = pState.claimed.includes(m.id);
+    if (isClaimed) claimedCount++;
+
+    let cardClass = 'mission-card';
+    if (done && !isClaimed) cardClass += ' completed';
+    if (isClaimed)          cardClass += ' claimed';
+
+    const claimArea = isClaimed
+      ? `<div class="mission-claimed-badge">✅ Reclamada</div>`
+      : done
+      ? `<button class="mission-claim-btn" onclick="claimMission('${m.id}','${periodKey}')">🪙 Reclamar ${m.reward} monedas</button>`
+      : '';
+
+    return `
+      <div class="${cardClass}">
+        <div class="mission-top">
+          <div class="mission-info">
+            <span class="mission-icon">${m.icon}</span>
+            <div class="mission-title">${m.title}</div>
+            <div class="mission-desc">${m.desc}</div>
+          </div>
+          <div class="mission-reward">🪙 ${m.reward}</div>
+        </div>
+        <div class="mission-progress-wrap">
+          <div class="mission-progress-bar">
+            <div class="mission-progress-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="mission-progress-text">${val} / ${m.target}${isClaimed ? ' · Completada ✓' : ''}</div>
+        </div>
+        ${claimArea}
+      </div>
+    `;
+  }).join('');
+
+  list.innerHTML = html;
+
+  const countEl = document.getElementById('missions-completed-count');
+  const totalEl = document.getElementById('missions-total-count');
+  if (countEl) countEl.textContent = claimedCount;
+  if (totalEl) totalEl.textContent = pState.missions.length;
+}
+
+/* ═══════════════════════════════════════════════════
+   XP & RANK SYSTEM
+═══════════════════════════════════════════════════ */
+
+// CoD-style rank tiers: each tier has multiple levels inside it
+const RANK_TIERS = [
+  { id: 'recruit',   name: 'Recluta',      emblem: '🪖',  color: '#9ca3af', levels: [1,5],   xpPerLevel: 100 },
+  { id: 'private',   name: 'Soldado',      emblem: '🎖️',  color: '#6ee7b7', levels: [6,10],  xpPerLevel: 150 },
+  { id: 'corporal',  name: 'Cabo',         emblem: '🏅',  color: '#60a5fa', levels: [11,18], xpPerLevel: 220 },
+  { id: 'sergeant',  name: 'Sargento',     emblem: '⭐',  color: '#fbbf24', levels: [19,28], xpPerLevel: 300 },
+  { id: 'lieutenant',name: 'Teniente',     emblem: '🌟',  color: '#f97316', levels: [29,40], xpPerLevel: 400 },
+  { id: 'captain',   name: 'Capitán',      emblem: '🦅',  color: '#ef4444', levels: [41,55], xpPerLevel: 550 },
+  { id: 'major',     name: 'Mayor',        emblem: '⚔️',  color: '#c084fc', levels: [56,70], xpPerLevel: 750 },
+  { id: 'colonel',   name: 'Coronel',      emblem: '🛡️',  color: '#a78bfa', levels: [71,85], xpPerLevel: 1000 },
+  { id: 'general',   name: 'General',      emblem: '🎗️',  color: '#e879f9', levels: [86,99], xpPerLevel: 1400 },
+  { id: 'legend',    name: 'Leyenda',      emblem: '👑',  color: '#fde68a', levels: [100,100], xpPerLevel: 0 },
+];
+
+// XP table: cumulative XP required to reach each level
+function buildXpTable() {
+  const table = [0, 0]; // index 0 unused, level 1 = 0 XP
+  let cumulative = 0;
+  for (const tier of RANK_TIERS) {
+    const [minLv, maxLv] = tier.levels;
+    for (let lv = minLv; lv <= maxLv; lv++) {
+      if (lv === 1) continue;
+      cumulative += tier.xpPerLevel;
+      table[lv] = cumulative;
+    }
+  }
+  return table;
+}
+const XP_TABLE = buildXpTable();
+const MAX_LEVEL = 100;
+
+function getTierForLevel(level) {
+  return RANK_TIERS.find(t => level >= t.levels[0] && level <= t.levels[1]) || RANK_TIERS[0];
+}
+
+function getRankDisplayName(level) {
+  const tier = getTierForLevel(level);
+  if (level === MAX_LEVEL) return `${tier.name} Supremo`;
+  const tierLevels = tier.levels;
+  const posInTier  = level - tierLevels[0] + 1;
+  const romanNumerals = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV'];
+  const roman = romanNumerals[posInTier - 1] || posInTier;
+  return `${tier.name} ${roman}`;
+}
+
+// XP persistence
+function getXPData() {
+  try { return JSON.parse(localStorage.getItem('trivia_xp') || '{"totalXP":0,"level":1}'); }
+  catch { return { totalXP: 0, level: 1 }; }
+}
+function saveXPData(d) { localStorage.setItem('trivia_xp', JSON.stringify(d)); }
+
+function getLevelFromXP(totalXP) {
+  let level = 1;
+  for (let lv = MAX_LEVEL; lv >= 1; lv--) {
+    if (totalXP >= XP_TABLE[lv]) { level = lv; break; }
+  }
+  return level;
+}
+
+function getXPForCurrentLevel(totalXP, level) {
+  return totalXP - XP_TABLE[level];
+}
+function getXPNeededForNextLevel(level) {
+  if (level >= MAX_LEVEL) return 0;
+  return XP_TABLE[level + 1] - XP_TABLE[level];
+}
+
+function addXP(amount, reason) {
+  const d = getXPData();
+  const oldLevel = d.level;
+  d.totalXP += amount;
+  d.level = getLevelFromXP(d.totalXP);
+  saveXPData(d);
+
+  // Show toast
+  showXPToast(`+${amount} XP${reason ? ' · ' + reason : ''}`);
+
+  // Level-up?
+  if (d.level > oldLevel) {
+    setTimeout(() => showLevelUpModal(d.level, oldLevel), 800);
+  }
+
+  updateRankHUD();
+  return d;
+}
+
+function showXPToast(msg) {
+  const t = document.getElementById('xp-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function showLevelUpModal(newLevel, oldLevel) {
+  const tier = getTierForLevel(newLevel);
+  const rankName = getRankDisplayName(newLevel);
+  document.getElementById('lu-emblem').textContent = tier.emblem;
+  document.getElementById('lu-title').textContent = '¡Subiste de nivel!';
+  document.getElementById('lu-rank').textContent   = `${rankName} · Nivel ${newLevel}`;
+  const prevTier = getTierForLevel(oldLevel);
+  const newRankInfo = tier.id !== prevTier.id
+    ? `🎉 ¡Nuevo rango desbloqueado: ${tier.name}!`
+    : `Sigue así para alcanzar el siguiente rango`;
+  document.getElementById('lu-xp-info').textContent = newRankInfo;
+  document.getElementById('levelup-modal').classList.add('show');
+}
+function closeLevelUpModal() {
+  document.getElementById('levelup-modal').classList.remove('show');
+}
+window.closeLevelUpModal = closeLevelUpModal;
+
+function updateRankHUD() {
+  const d = getXPData();
+  const level = d.level;
+  const tier  = getTierForLevel(level);
+  const rankName = getRankDisplayName(level);
+
+  // Fixed badge (top-left)
+  document.getElementById('hud-rank-emblem').textContent = tier.emblem;
+  document.getElementById('hud-rank-name').textContent   = tier.name;
+  document.getElementById('hud-rank-level').textContent  = `Nv. ${level}`;
+
+  // Rank profile section
+  document.getElementById('rank-big-emblem').textContent = tier.emblem;
+  document.getElementById('rank-title-big').textContent  = rankName;
+  document.getElementById('rank-sub').textContent        = `Nivel ${level} · ${d.totalXP} XP total`;
+
+  // XP bar
+  const xpInLevel  = getXPForCurrentLevel(d.totalXP, level);
+  const xpNeeded   = getXPNeededForNextLevel(level);
+  const pct        = level >= MAX_LEVEL ? 100 : Math.round((xpInLevel / xpNeeded) * 100);
+  document.getElementById('xp-bar-fill').style.width = pct + '%';
+  document.getElementById('xp-current-label').textContent = `${xpInLevel} XP`;
+  document.getElementById('xp-next-label').textContent    = level >= MAX_LEVEL ? '¡Nivel máximo!' : `${xpNeeded} XP para nivel ${level + 1}`;
+
+  // Stats
+  const stats = getStats();
+  const sg = document.getElementById('stat-total-games'); if (sg) sg.textContent = stats.games_played || 0;
+  const sw = document.getElementById('stat-total-wins');  if (sw) sw.textContent = stats.wins || 0;
+  const sx = document.getElementById('stat-total-xp');    if (sx) sx.textContent = d.totalXP;
+
+  // Tier grid
+  renderRankTierGrid(level);
+}
+
+function renderRankTierGrid(currentLevel) {
+  const grid = document.getElementById('rank-tier-grid');
+  if (!grid) return;
+  grid.innerHTML = RANK_TIERS.map(tier => {
+    const isUnlocked = currentLevel >= tier.levels[0];
+    const isCurrent  = currentLevel >= tier.levels[0] && currentLevel <= tier.levels[1];
+    let cls = 'rank-tier-card';
+    if (isCurrent)       cls += ' current-tier';
+    else if (isUnlocked) cls += ' unlocked';
+    else                 cls += ' locked';
+    const levelRange = tier.levels[0] === tier.levels[1]
+      ? `Nv. ${tier.levels[0]}`
+      : `Nv. ${tier.levels[0]}–${tier.levels[1]}`;
+    return `
+      <div class="${cls}">
+        <span class="tier-emblem">${tier.emblem}</span>
+        <div class="tier-name">${tier.name}</div>
+        <div class="tier-levels">${levelRange}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// XP rewards config
+const XP_REWARDS = {
+  win_vs_ai_easy:    20,
+  win_vs_ai_medium:  30,
+  win_vs_ai_hard:    45,
+  win_vs_ai_crack:   70,
+  lose_vs_ai:        10,
+  win_online:        50,
+  lose_online:       15,
+  mission_daily:     15,
+  mission_weekly:    35,
+};
+
+/* ═══════════════════════════════════════════════════
+   SECTION NAVIGATION (swipe + button) — 3 PANELS
+═══════════════════════════════════════════════════ */
+// Order: game (0) → missions (1) → rank (2)
+const SECTIONS = ['game', 'missions', 'rank'];
+let currentSection = 'game';
+
+function showSection(name) {
+  currentSection = name;
+  const idx     = SECTIONS.indexOf(name);
+  const wrapper = document.getElementById('sections-wrapper');
+  wrapper.style.transform = `translateX(-${idx * 100}vw)`;
+
+  const btnText = document.getElementById('nav-btn-text');
+  if (name === 'game')     btnText.textContent = '🎯 Misiones';
+  if (name === 'missions') btnText.textContent = '🏅 Mi Rango';
+  if (name === 'rank')     btnText.textContent = '← Volver al juego';
+
+  if (name === 'missions') renderMissions();
+  if (name === 'rank')     updateRankHUD();
+}
+function toggleSection() {
+  const idx  = SECTIONS.indexOf(currentSection);
+  const next = SECTIONS[(idx + 1) % SECTIONS.length];
+  showSection(next);
+}
+window.showSection   = showSection;
+window.toggleSection = toggleSection;
+
+// Touch/swipe support
+(function() {
+  let startX = 0, startY = 0, isDragging = false;
+  document.addEventListener('touchstart', e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    isDragging = true;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (!isDragging) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    isDragging = false;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      const idx = SECTIONS.indexOf(currentSection);
+      if (dx < 0 && idx < SECTIONS.length - 1) showSection(SECTIONS[idx + 1]);
+      if (dx > 0 && idx > 0)                   showSection(SECTIONS[idx - 1]);
+    }
+  }, { passive: true });
+})();
+
+// Refresh timers every minute
+setInterval(updateTabTimers, 60000);
+
+// Init on load
+updateCoinDisplay();
+renderMissions();
+updateRankHUD();
 </script>
 </body>
 </html>
